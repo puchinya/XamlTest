@@ -1,7 +1,5 @@
 package net.daradara.xpf;
 
-import net.daradara.xpf.RoutedEvent;
-
 /**
  * Created by masatakanabeshima on 2016/01/10.
  */

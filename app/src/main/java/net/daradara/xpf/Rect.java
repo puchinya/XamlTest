@@ -16,6 +16,26 @@ public class Rect {
 
     public double x, y, width, height;
 
+    public double getLeft()
+    {
+        return x;
+    }
+
+    public double getTop()
+    {
+        return y;
+    }
+
+    public double getRight()
+    {
+        return x + width;
+    }
+
+    public double getBottom()
+    {
+        return y + height;
+    }
+
     public boolean getIsEmpty()
     {
         return x == Double.POSITIVE_INFINITY &&

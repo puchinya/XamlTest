@@ -1,7 +1,5 @@
 package net.daradara.xpf.data;
 
-import net.daradara.xpf.data.BindingMode;
-
 /**
  * Created by masatakanabeshima on 2016/01/21.
  */

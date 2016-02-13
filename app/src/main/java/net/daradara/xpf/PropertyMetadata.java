@@ -2,8 +2,6 @@ package net.daradara.xpf;
 
 import android.support.annotation.Nullable;
 
-import net.daradara.xpf.DependencyProperty;
-
 /**
  * Created by masatakanabeshima on 2016/01/10.
  */

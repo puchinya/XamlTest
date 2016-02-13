@@ -1,9 +1,10 @@
 package net.daradara.xamltest;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
-public class MainActivity extends AppCompatActivity {
+import net.daradara.xpf.android.AndroidActivity;
+
+public class MainActivity extends AndroidActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
