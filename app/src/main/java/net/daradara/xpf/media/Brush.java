@@ -25,6 +25,6 @@ public abstract class Brush extends DependencyObject {
     }
 
     public static final DependencyProperty opacityProperty = DependencyProperty.register("opacity",
-            Double.TYPE, Brush.class, new PropertyMetadata(new Double(100.0)));
+            Double.class, Brush.class, new PropertyMetadata(new Double(100.0)));
 
 }

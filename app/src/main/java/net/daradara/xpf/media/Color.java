@@ -20,7 +20,7 @@ public class Color {
         return c;
     }
 
-    public static Color fromRgb(int a, int r, int g, int b)
+    public static Color fromRgb(int r, int g, int b)
     {
         Color c = new Color();
         c.a = 255;

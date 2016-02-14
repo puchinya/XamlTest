@@ -92,7 +92,10 @@ public class AndroidDrawingContext extends DrawingContext
             throw new IllegalArgumentException();
         }
 
-        m_canvas.setMatrix(m_matrix);
+        Matrix prevMatrix = m_canvas.getMatrix();
+        Matrix matrix = createMatrix(m_visual);
+        matrix.postConcat(prevMatrix);
+//        m_canvas.setMatrix(matrix);
 
         Paint paint = createPaint(brush);
         if(paint != null) {
@@ -105,6 +108,8 @@ public class AndroidDrawingContext extends DrawingContext
             m_canvas.drawRect((float) rect.x, (float) rect.y,
                     (float) rect.getRight(), (float) rect.getBottom(), paint);
         }
+
+//        m_canvas.setMatrix(prevMatrix);
     }
 
     @Override

@@ -53,7 +53,7 @@ public class DependencyProperty {
     public boolean isValidType(@Nullable Object value)
     {
         if(value == null) return true;
-        return m_propertyType.isInstance(value);
+        return m_propertyType.isAssignableFrom(value.getClass());
     }
 
     public boolean isValidValue(@Nullable Object value)

@@ -16,6 +16,17 @@ import net.daradara.xpf.media.Visual;
  */
 public class AndroidView extends View
 {
+    public AndroidView(Context context)
+    {
+        super(context);
+    }
+
+    public AndroidView(Context context,
+                       AttributeSet attrs)
+    {
+        this(context, attrs, 0);
+    }
+
     public AndroidView(Context context,
                        AttributeSet attrs,
                        int defStyleAttr)
@@ -51,7 +62,7 @@ public class AndroidView extends View
         for(int i = 0; i < visual.getVisualChildrenCount(); i++)
         {
             Visual child = visual.getVisualChild(i);
-            drawVisual(visual, canvas);
+            drawVisual(child, canvas);
         }
     }
 

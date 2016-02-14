@@ -258,24 +258,16 @@ public class FrameworkElement extends UIElement {
         return null;
     }
 
-    public double getMinWidth()
+    protected final @NonNull Size measureCore(@NonNull Size availableSize)
     {
-        return ((Double)getValue(minWidthProperty)).doubleValue();
-    }
+        double width = getWidth();
+        double height = getHeight();
+        double minWidth = getMinWidth();
+        double minHeight = getMinHeight();
+        double maxWidth = getMaxWidth();
+        double maxHeight = getMaxHeight();
 
-    public void measure(@NonNull Size availableSize)
-    {
-        Size size = measureCore(availableSize);
-
-    }
-
-    protected final Size measureCore(@NonNull Size availableSize)
-    {
-        double width = ((Double)getValue(widthProperty)).doubleValue();
-        double minWidth = ((Double)getValue(minWidthProperty)).doubleValue();
-        double maxWidth = ((Double)getValue(maxWidthProperty)).doubleValue();
-
-        Thickness margin = ((Thickness)getValue(marginProperty));
+        Thickness margin = getMargin();
 
         double realAvailableWidth = availableSize.getWidth();
         double realAvailableHeight = availableSize.getHeight();
@@ -290,15 +282,22 @@ public class FrameworkElement extends UIElement {
             realAvailableWidth = maxWidth;
         }
 
-        realAvailableWidth -= margin.getLeft() + margin.getRight();
-        if(realAvailableWidth < 0.0) realAvailableWidth = 0.0;
+        if(height != Double.NaN) {
+            realAvailableHeight = height;
+        }
+        if(minHeight != Double.NaN && realAvailableHeight < minHeight) {
+            realAvailableHeight = minHeight;
+        }
+        if(maxHeight != Double.NaN && realAvailableHeight > maxHeight) {
+            realAvailableHeight = maxHeight;
+        }
 
         Size childrenAvailableSize = new Size(realAvailableWidth, realAvailableHeight);
 
         Size childrenDesiredSize = measureOverride(childrenAvailableSize);
 
         double desiredWidth = childrenDesiredSize.getWidth() + margin.getLeft() + margin.getRight();
-        double desiredHeight = childrenDesiredSize.getHeight();
+        double desiredHeight = childrenDesiredSize.getHeight() + margin.getTop() + margin.getBottom();
 
         return new Size(desiredWidth, desiredHeight);
     }
@@ -317,6 +316,64 @@ public class FrameworkElement extends UIElement {
     protected void removeLogicalChild(Object child)
     {
         m_logicalChildren.remove(child);
+    }
+
+    public void setWidth(double value)
+    {
+        setValue(widthProperty, Double.valueOf(value));
+    }
+
+    public double getWidth() {
+        return ((Double)getValue(widthProperty)).doubleValue();
+    }
+
+    public void setHeight(double value)
+    {
+        setValue(heightProperty, Double.valueOf(value));
+    }
+
+    public double getHeight() {
+        return ((Double)getValue(heightProperty)).doubleValue();
+    }
+
+    public void setMinWidth(double value) {
+        setValue(minWidthProperty, Double.valueOf(value));
+    }
+
+    public double getMinWidth() {
+        return ((Double)getValue(minWidthProperty)).doubleValue();
+    }
+
+    public void setMinHeight(double value) {
+        setValue(minHeightProperty, Double.valueOf(value));
+    }
+
+    public double getMinHeight() {
+        return ((Double)getValue(minHeightProperty)).doubleValue();
+    }
+
+    public void setMaxWidth(double value) {
+        setValue(maxWidthProperty, Double.valueOf(value));
+    }
+
+    public double getMaxWidth() {
+        return ((Double)getValue(maxWidthProperty)).doubleValue();
+    }
+
+    public void setMaxHeight(double value) {
+        setValue(maxHeightProperty, Double.valueOf(value));
+    }
+
+    public double getMaxHeight() {
+        return ((Double)getValue(maxHeightProperty)).doubleValue();
+    }
+
+    public @NonNull Thickness getMargin() {
+        return (Thickness)getValue(marginProperty);
+    }
+
+    public void setMargin(@NonNull Thickness value) {
+        setValue(marginProperty, value);
     }
 
     public static final DependencyProperty actualWidthProperty = DependencyProperty.registerReadOnly("actualWidth", Double.class,

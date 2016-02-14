@@ -49,6 +49,11 @@ public class UIElement extends Visual {
         setValue(visibilityProperty, value);
     }
 
+    public Size getDesiredSize()
+    {
+        return m_desiredSize;
+    }
+
     public void AddHandler(RoutedEvent routedEvent, Delegate handler)
     {
         m_handlers.put(routedEvent, handler);
@@ -56,14 +61,19 @@ public class UIElement extends Visual {
 
     public void measure(@NonNull Size availableSize)
     {
+        if(m_isMeasureValid) {
+            return;
+        }
+
         if(getVisibility() == Visibility.COLLAPSED) {
             m_desiredSize = new Size();
         } else {
             m_desiredSize = measureCore(availableSize);
         }
+        m_isMeasureValid = true;
     }
 
-    protected Size measureCore(@NonNull Size availableSize)
+    protected @NonNull Size measureCore(@NonNull Size availableSize)
     {
         return new Size();
     }
