@@ -7,19 +7,33 @@ import net.daradara.xpf.PropertyMetadata;
 /**
  * Created by masatakanabeshima on 2016/02/12.
  */
-public abstract class Brush extends DependencyObject {
+public abstract class Brush extends DependencyObject implements Cloneable {
 
     protected Brush()
     {
 
     }
 
-    public double getOpacity()
+    @Override
+    public Brush clone()
+    {
+        Brush r = null;
+
+        try {
+            r = (Brush)super.clone();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return r;
+    }
+
+    public final double getOpacity()
     {
         return ((Double)getValue(opacityProperty)).doubleValue();
     }
 
-    public void setOpacity(double value)
+    public final void setOpacity(double value)
     {
         setValue(opacityProperty, new Double(value));
     }

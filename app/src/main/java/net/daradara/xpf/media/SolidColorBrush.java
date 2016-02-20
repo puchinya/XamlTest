@@ -8,7 +8,7 @@ import net.daradara.xpf.PropertyMetadata;
 /**
  * Created by masatakanabeshima on 2016/02/12.
  */
-public class SolidColorBrush extends Brush {
+public final class SolidColorBrush extends Brush implements Cloneable {
 
     public SolidColorBrush(@Nullable Color color)
     {
@@ -18,6 +18,20 @@ public class SolidColorBrush extends Brush {
     public SolidColorBrush()
     {
 
+    }
+
+    @Override
+    public SolidColorBrush clone()
+    {
+        SolidColorBrush r = null;
+
+        try {
+            r = (SolidColorBrush)super.clone();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return r;
     }
 
     public @Nullable Color getColor()

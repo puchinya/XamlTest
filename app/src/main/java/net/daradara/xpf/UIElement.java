@@ -1,9 +1,12 @@
 package net.daradara.xpf;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
+import net.daradara.xpf.android.ElementHost;
 import net.daradara.xpf.delegate.Delegate;
-import net.daradara.xpf.media.Visual;
+import net.daradara.xpf.delegate.Func;
+import net.daradara.xpf.media.DrawingGroup;
 import net.daradara.xpf.media.DrawingContext;
 
 import java.util.HashMap;
@@ -14,96 +17,109 @@ import java.util.Map;
  */
 public class UIElement extends Visual {
 
-    public void onRender(DrawingContext drawingContext)
+    protected void onRender(DrawingContext drawingContext)
     {
 
     }
 
-    public boolean getIsEnabled()
+    public final boolean getIsEnabled()
     {
         return ((Boolean)getValue(isEnabledProperty)).booleanValue();
     }
 
-    public void setIsEnabled(boolean value)
+    public final void setIsEnabled(boolean value)
     {
         setValue(isEnabledProperty, Boolean.valueOf(value));
     }
 
-    public boolean getIsHitTestVisible()
+    public final boolean getIsHitTestVisible()
     {
         return ((Boolean)getValue(isHitTestVisibleProperty)).booleanValue();
     }
 
-    public void setIsHitTestVisible(boolean value)
+    public final void setIsHitTestVisible(boolean value)
     {
         setValue(isHitTestVisibleProperty, Boolean.valueOf(value));
     }
 
-    public Visibility getVisibility()
+    public final Visibility getVisibility()
     {
         return (Visibility)getValue(visibilityProperty);
     }
 
-    public void setVisibility(Visibility value)
+    public final void setVisibility(Visibility value)
     {
         setValue(visibilityProperty, value);
     }
 
-    public Size getDesiredSize()
+    public final Size getDesiredSize()
     {
         return m_desiredSize;
     }
 
-    public void AddHandler(RoutedEvent routedEvent, Delegate handler)
+    public final void AddHandler(RoutedEvent routedEvent, Delegate handler)
     {
         m_handlers.put(routedEvent, handler);
     }
 
-    public void measure(@NonNull Size availableSize)
+    public final void measure(@NonNull Size availableSize)
     {
-        if(m_isMeasureValid) {
-            return;
-        }
+        Size desiredSize;
 
         if(getVisibility() == Visibility.COLLAPSED) {
-            m_desiredSize = new Size();
+            desiredSize = Size.ZERO;
         } else {
-            m_desiredSize = measureCore(availableSize);
+            desiredSize = measureCore(availableSize);
         }
+
+        m_desiredSize = desiredSize;
+
         m_isMeasureValid = true;
     }
 
     protected @NonNull Size measureCore(@NonNull Size availableSize)
     {
-        return new Size();
+        return Size.ZERO;
     }
 
-    public void invalidateArrange()
+    public final void arrange(@NonNull Rect finalRect)
+    {
+        if(getVisibility() != Visibility.COLLAPSED) {
+            arrangeCore(finalRect);
+        }
+
+        m_isArrangeValid = true;
+
+        render();
+    }
+
+    protected void arrangeCore(@NonNull Rect finalRect)
+    {
+
+    }
+
+    public final void invalidateArrange()
     {
         m_isArrangeValid = false;
-        for(int i = 0; i < getVisualChildrenCount(); i++) {
-            Visual child = getVisualChild(i);
-            if(child instanceof UIElement) {
-                ((UIElement)child).invalidateArrange();
+        getDispatcher().beginInvoke(new Func<Void, UIElement>() {
+            @Override
+            public Void invokeOverride(UIElement element) {
+                ElementHost.ElementHostRoot root = ElementHost.ElementHostRoot.getElementHostRoot(element);
+                root.doArrange();
+                return null;
             }
-        }
-
+        }, new Object[]{this});
     }
 
-    public void invalidateMeasure()
+    public final void invalidateMeasure()
     {
         m_isMeasureValid = false;
-        for(int i = 0; i < getVisualChildrenCount(); i++) {
-            Visual child = getVisualChild(i);
-            if(child instanceof UIElement) {
-                ((UIElement)child).invalidateMeasure();
-            }
-        }
         invalidateArrange();
     }
 
-    public void invalidateVisual()
+    public final void invalidateVisual()
     {
+        m_isVisualValid = false;
         invalidateArrange();
     }
 
@@ -136,10 +152,29 @@ public class UIElement extends Visual {
         processEvent(e);
     }
 
-    public static final DependencyProperty isEnabledProperty = DependencyProperty.register("isEnabled", Boolean.TYPE,
+    private void render()
+    {
+        DrawingGroup drawing = new DrawingGroup();
+        if(getVisibility() == Visibility.VISIBLE) {
+            onRender(drawing.append());
+        }
+
+        m_drawing = drawing;
+        m_isVisualValid = true;
+    }
+
+    /**
+     * Cannot use
+     * @return
+     */
+    public final DrawingGroup getDrawing() {
+        return m_drawing;
+    }
+
+    public static final DependencyProperty isEnabledProperty = DependencyProperty.register("isEnabled", Boolean.class,
             UIElement.class, new PropertyMetadata(Boolean.TRUE));
 
-    public static final DependencyProperty isHitTestVisibleProperty = DependencyProperty.register("isHitTestVisible", Boolean.TYPE,
+    public static final DependencyProperty isHitTestVisibleProperty = DependencyProperty.register("isHitTestVisible", Boolean.class,
             UIElement.class, new PropertyMetadata(Boolean.TRUE));
 
     public static final DependencyProperty visibilityProperty = DependencyProperty.register("visibility", Visibility.class,
@@ -151,4 +186,5 @@ public class UIElement extends Visual {
     private boolean m_isArrangeValid = false;
     private boolean m_isMeasureValid = false;
     private boolean m_isVisualValid = false;
+    private DrawingGroup m_drawing = null;
 }

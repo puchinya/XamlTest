@@ -1,23 +1,27 @@
 package net.daradara.xpf;
 
+import android.support.annotation.NonNull;
+
 /**
  * Created by masatakanabeshima on 2016/01/23.
  */
-public class Size {
-
-    public Size()
-    {
-        m_width = 0.0;
-        m_height = 0.0;
-    }
+public final class Size {
 
     public Size(double width, double height)
     {
         m_width = width;
         m_height = height;
+    }
+
+    public Size(@NonNull Size size)
+    {
+        m_width = size.m_width;
+        m_height = size.m_height;
 
     }
 
+    public static final Size ZERO = new Size(0.0, 0.0);
+    public static final Size INFINITY = new Size(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
     public static final Size EMPTY = new Size(Double.MIN_VALUE, Double.MIN_VALUE);
 
     public boolean isEmpty()
@@ -35,6 +39,6 @@ public class Size {
         return m_height;
     }
 
-    private double m_width;
-    private double m_height;
+    private final double m_width;
+    private final double m_height;
 }

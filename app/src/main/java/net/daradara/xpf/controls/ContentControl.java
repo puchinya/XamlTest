@@ -5,9 +5,10 @@ import android.support.annotation.Nullable;
 
 import net.daradara.xpf.DependencyProperty;
 import net.daradara.xpf.PropertyMetadata;
+import net.daradara.xpf.Rect;
 import net.daradara.xpf.Size;
 import net.daradara.xpf.UIElement;
-import net.daradara.xpf.media.Visual;
+import net.daradara.xpf.Visual;
 
 /**
  * Created by masatakanabeshima on 2016/02/13.
@@ -42,9 +43,19 @@ public class ContentControl extends Control {
             m_child.measure(availableSize);
             desiredSize = m_child.getDesiredSize();
         } else {
-            desiredSize = new Size();
+            desiredSize = Size.ZERO;
         }
         return desiredSize;
+    }
+
+    @Override
+    protected @NonNull Size arrangeOverride(@NonNull Size finalSize)
+    {
+        if(m_child != null) {
+            m_child.arrange(new Rect(0.0, 0.0,
+                    finalSize.getWidth(), finalSize.getHeight()));
+        }
+        return finalSize;
     }
 
     @Override
@@ -55,11 +66,13 @@ public class ContentControl extends Control {
 
         if(dp == contentProperty && oldValue != newValue) {
             if(oldValue != null) {
+                removeVisualChild((Visual)oldValue);
                 removeLogicalChild(oldValue);
             }
 
             if(newValue != null) {
                 addLogicalChild(newValue);
+                addVisualChild((Visual)newValue);
             }
 
             // Update hasContent dependency property

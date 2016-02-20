@@ -5,7 +5,7 @@ import android.support.annotation.Nullable;
 /**
  * Created by masatakanabeshima on 2016/01/10.
  */
-public class PropertyMetadata {
+public final class PropertyMetadata {
 
     public PropertyMetadata()
     {

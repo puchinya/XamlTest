@@ -10,7 +10,9 @@ import net.daradara.xpf.delegate.Func;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -101,7 +103,7 @@ public class FrameworkElement extends UIElement {
         bindingSet.binding = binding;
         bindingSet.propertyChangedEventHandler = new Func<Void, String>() {
             @Override
-            public Void invoke(String s) {
+            public Void invokeOverride(String s) {
 
                 Object source = getBindingSource(binding);
 
@@ -182,6 +184,8 @@ public class FrameworkElement extends UIElement {
     protected void onPropertyChanged(@NonNull DependencyProperty dp,
                                      @Nullable Object oldValue, @Nullable Object newValue)
     {
+        super.onPropertyChanged(dp, oldValue, newValue);
+
         BindingSet bindingSet = m_bindings.get(dp);
 
         if(bindingSet != null && !bindingSet.settingToSource) {
@@ -228,6 +232,8 @@ public class FrameworkElement extends UIElement {
                     break;
             }
         }
+
+        invalidateMeasure();
     }
 
     private static @Nullable Method getSetter(@NonNull Class type, @NonNull String propertyName)
@@ -258,6 +264,7 @@ public class FrameworkElement extends UIElement {
         return null;
     }
 
+    @Override
     protected final @NonNull Size measureCore(@NonNull Size availableSize)
     {
         double width = getWidth();
@@ -267,114 +274,202 @@ public class FrameworkElement extends UIElement {
         double maxWidth = getMaxWidth();
         double maxHeight = getMaxHeight();
 
+        HorizontalAlignment horizontalAlignment = getHorizontalAlignment();
+        VerticalAlignment verticalAlignment = getVerticalAlignment();
+
         Thickness margin = getMargin();
 
-        double realAvailableWidth = availableSize.getWidth();
-        double realAvailableHeight = availableSize.getHeight();
+        double realAvailableWidth = availableSize.getWidth() - (margin.getLeft() + margin.getRight());
+        double realAvailableHeight = availableSize.getHeight() - (margin.getTop() + margin.getBottom());
 
-        if(width != Double.NaN) {
-            realAvailableWidth = width;
-        }
-        if(minWidth != Double.NaN && realAvailableWidth < minWidth) {
-            realAvailableWidth = minWidth;
-        }
-        if(maxWidth != Double.NaN && realAvailableWidth > maxWidth) {
-            realAvailableWidth = maxWidth;
-        }
+        double constraintWidth = Double.POSITIVE_INFINITY;
+        double constraintHeight = Double.POSITIVE_INFINITY;
 
-        if(height != Double.NaN) {
-            realAvailableHeight = height;
+        if(horizontalAlignment == HorizontalAlignment.STRETCH) {
+            constraintWidth = realAvailableWidth;
         }
-        if(minHeight != Double.NaN && realAvailableHeight < minHeight) {
-            realAvailableHeight = minHeight;
-        }
-        if(maxHeight != Double.NaN && realAvailableHeight > maxHeight) {
-            realAvailableHeight = maxHeight;
+        if(verticalAlignment == VerticalAlignment.STRETCH) {
+            constraintHeight = realAvailableHeight;
         }
 
-        Size childrenAvailableSize = new Size(realAvailableWidth, realAvailableHeight);
+        if(!Double.isNaN(minWidth)) {
+            if(constraintWidth < minWidth) {
+                constraintWidth = minWidth;
+            }
+            if(!Double.isNaN(width) && width < minWidth) {
+                width = minWidth;
+            }
+        }
+        if(!Double.isNaN(maxWidth)) {
+            if(constraintWidth > maxWidth) {
+                constraintWidth = maxWidth;
+            }
+            if(!Double.isNaN(width) && width > maxWidth) {
+                width = maxWidth;
+            }
+        }
 
-        Size childrenDesiredSize = measureOverride(childrenAvailableSize);
+        if(!Double.isNaN(width)) {
+            constraintWidth = width;
+        }
 
-        double desiredWidth = childrenDesiredSize.getWidth() + margin.getLeft() + margin.getRight();
-        double desiredHeight = childrenDesiredSize.getHeight() + margin.getTop() + margin.getBottom();
+        if(!Double.isNaN(minHeight)) {
+            if(constraintHeight < minHeight) {
+                constraintHeight = minHeight;
+            }
+            if(!Double.isNaN(height) && height < minHeight) {
+                height = minHeight;
+            }
+        }
+        if(!Double.isNaN(maxHeight)) {
+            if(constraintHeight > maxHeight) {
+                constraintHeight = maxHeight;
+            }
+            if(!Double.isNaN(height) && height > maxHeight) {
+                height = maxHeight;
+            }
+        }
+
+        if(!Double.isNaN(height)) {
+            constraintHeight = height;
+        }
+
+        Size childSize = measureOverride(new Size(constraintWidth, constraintHeight));
+        double actualWidth = Double.isInfinite(constraintWidth) ? childSize.getWidth() : constraintWidth;
+        double actualHeight = Double.isInfinite(constraintHeight) ? childSize.getHeight() : constraintHeight;
+
+        double desiredWidth = actualWidth + margin.getLeft() + margin.getRight();
+        double desiredHeight = actualHeight + margin.getTop() + margin.getBottom();
 
         return new Size(desiredWidth, desiredHeight);
     }
 
-    protected Size measureOverride(@NonNull Size availableSize)
+    protected @NonNull Size measureOverride(@NonNull Size availableSize)
     {
-        Size desiredSize = new Size();
-        return desiredSize;
+        return Size.ZERO;
     }
 
-    protected void addLogicalChild(Object child)
+    @Override
+    protected final void arrangeCore(@NonNull Rect finalRect)
     {
+        double finalWidth = finalRect.width;
+        double finalHeight = finalRect.height;
+        Thickness margin = getMargin();
+
+        finalWidth -= margin.getLeft() + margin.getRight();
+        finalHeight -= margin.getTop() + margin.getBottom();
+
+        if(finalWidth < 0.0) finalWidth = 0.0;
+        if(finalHeight < 0.0) finalHeight = 0.0;
+
+        Size usedSize = arrangeOverride(new Size(finalWidth, finalHeight));
+
+        double offsetX = finalRect.x + margin.getLeft();
+        double offsetY = finalRect.y + margin.getTop();
+
+        setVisualOffset(new Vector(offsetX, offsetY));
+        setActualWidth(usedSize.getWidth());
+        setActualHeight(usedSize.getHeight());
+    }
+
+    protected @NonNull Size arrangeOverride(@NonNull Size finalSize)
+    {
+        return finalSize;
+    }
+
+    protected final void addLogicalChild(Object child)
+    {
+        if(child instanceof FrameworkElement) {
+            ((FrameworkElement)child).m_parent = this;
+        }
         m_logicalChildren.add(child);
     }
 
-    protected void removeLogicalChild(Object child)
+    protected final void removeLogicalChild(Object child)
     {
         m_logicalChildren.remove(child);
+        if(child instanceof FrameworkElement) {
+            ((FrameworkElement)child).m_parent = null;
+        }
     }
 
-    public void setWidth(double value)
+    public final void setActualWidth(double value)
+    {
+        setValue(actualWidthProperty, Double.valueOf(value));
+    }
+
+    public final double getActualWidth() {
+        return ((Double)getValue(actualWidthProperty)).doubleValue();
+    }
+
+    public final void setActualHeight(double value)
+    {
+        setValue(actualHeightProperty, Double.valueOf(value));
+    }
+
+    public final double getActualHeight() {
+        return ((Double)getValue(actualHeightProperty)).doubleValue();
+    }
+
+    public final void setWidth(double value)
     {
         setValue(widthProperty, Double.valueOf(value));
     }
 
-    public double getWidth() {
+    public final double getWidth() {
         return ((Double)getValue(widthProperty)).doubleValue();
     }
 
-    public void setHeight(double value)
+    public final void setHeight(double value)
     {
         setValue(heightProperty, Double.valueOf(value));
     }
 
-    public double getHeight() {
+    public final double getHeight() {
         return ((Double)getValue(heightProperty)).doubleValue();
     }
 
-    public void setMinWidth(double value) {
+    public final void setMinWidth(double value) {
         setValue(minWidthProperty, Double.valueOf(value));
     }
 
-    public double getMinWidth() {
-        return ((Double)getValue(minWidthProperty)).doubleValue();
+    public final double getMinWidth() { return ((Double)getValue(minWidthProperty)).doubleValue(); }
+
+    public final void setMinHeight(double value) { setValue(minHeightProperty, Double.valueOf(value)); }
+
+    public final double getMinHeight() { return ((Double)getValue(minHeightProperty)).doubleValue(); }
+
+    public final void setMaxWidth(double value) { setValue(maxWidthProperty, Double.valueOf(value)); }
+
+    public final double getMaxWidth() { return ((Double)getValue(maxWidthProperty)).doubleValue(); }
+
+    public final void setMaxHeight(double value) { setValue(maxHeightProperty, Double.valueOf(value)); }
+
+    public final double getMaxHeight() { return ((Double)getValue(maxHeightProperty)).doubleValue(); }
+
+    public final @NonNull Thickness getMargin() { return (Thickness)getValue(marginProperty); }
+
+    public final void setMargin(@NonNull Thickness value) { setValue(marginProperty, value); }
+
+    public final void setHorizontalAlignment(HorizontalAlignment value) {
+        setValue(horizontalAlignmentProperty, value);
     }
 
-    public void setMinHeight(double value) {
-        setValue(minHeightProperty, Double.valueOf(value));
+    public final HorizontalAlignment getHorizontalAlignment() {
+        return (HorizontalAlignment)getValue(horizontalAlignmentProperty);
     }
 
-    public double getMinHeight() {
-        return ((Double)getValue(minHeightProperty)).doubleValue();
+    public final void setVerticalAlignment(VerticalAlignment value) { setValue(verticalAlignmentProperty, value); }
+
+    public final VerticalAlignment getVerticalAlignment() {
+        return (VerticalAlignment)getValue(verticalAlignmentProperty);
     }
 
-    public void setMaxWidth(double value) {
-        setValue(maxWidthProperty, Double.valueOf(value));
+    public final @Nullable DependencyObject getParent() {
+        return m_parent;
     }
 
-    public double getMaxWidth() {
-        return ((Double)getValue(maxWidthProperty)).doubleValue();
-    }
-
-    public void setMaxHeight(double value) {
-        setValue(maxHeightProperty, Double.valueOf(value));
-    }
-
-    public double getMaxHeight() {
-        return ((Double)getValue(maxHeightProperty)).doubleValue();
-    }
-
-    public @NonNull Thickness getMargin() {
-        return (Thickness)getValue(marginProperty);
-    }
-
-    public void setMargin(@NonNull Thickness value) {
-        setValue(marginProperty, value);
-    }
+    protected @NonNull Iterator getLogicalChildren() { return m_logicalChildren.iterator(); }
 
     public static final DependencyProperty actualWidthProperty = DependencyProperty.registerReadOnly("actualWidth", Double.class,
             FrameworkElement.class, new PropertyMetadata());
@@ -403,6 +498,12 @@ public class FrameworkElement extends UIElement {
     public static final DependencyProperty marginProperty = DependencyProperty.register("margin", Thickness.class,
             FrameworkElement.class, new PropertyMetadata(new Thickness(0.0)));
 
+    public static final DependencyProperty horizontalAlignmentProperty = DependencyProperty.register("horizontalAlignment",
+            HorizontalAlignment.class, FrameworkElement.class, new PropertyMetadata(HorizontalAlignment.LEFT));
+
+    public static final DependencyProperty verticalAlignmentProperty = DependencyProperty.register("verticalAlignment",
+            VerticalAlignment.class, FrameworkElement.class, new PropertyMetadata(VerticalAlignment.TOP));
+
     private static class BindingSet {
         public boolean settingToSource;
         public DependencyProperty dp;
@@ -412,5 +513,6 @@ public class FrameworkElement extends UIElement {
 
     private Map<DependencyProperty, BindingSet> m_bindings = new HashMap<>();
     private Object m_dataContext;
+    private FrameworkElement m_parent = null;
     private ArrayList<Object> m_logicalChildren = new ArrayList<>();
 }

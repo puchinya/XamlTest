@@ -8,7 +8,7 @@ import net.daradara.xpf.delegate.Func;
 /**
  * Created by masatakanabeshima on 2016/01/10.
  */
-public class DependencyProperty {
+public final class DependencyProperty {
 
     private DependencyProperty()
     {
@@ -61,7 +61,7 @@ public class DependencyProperty {
         if(!isValidType(value)) return false;
         if(m_validateValueCallback == null)
             return true;
-        return m_validateValueCallback.invoke(value);
+        return m_validateValueCallback.invokeOverride(value);
     }
 
     public static DependencyProperty register(@NonNull String name, @NonNull Class propertyType, @NonNull Class ownerType)

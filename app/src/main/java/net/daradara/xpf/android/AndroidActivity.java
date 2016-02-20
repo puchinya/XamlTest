@@ -1,7 +1,6 @@
 package net.daradara.xpf.android;
 
 import android.support.v7.app.AppCompatActivity;
-import android.util.AttributeSet;
 
 import net.daradara.xpf.controls.Page;
 
@@ -11,7 +10,7 @@ import net.daradara.xpf.controls.Page;
 public class AndroidActivity extends AppCompatActivity {
     public void setPage(Page page)
     {
-        AndroidView view = new AndroidView(getBaseContext());
+        ElementHost view = new ElementHost(getBaseContext());
         view.setContent(page);
         setContentView(view);
     }

@@ -5,7 +5,7 @@ import android.support.annotation.NonNull;
 /**
  * Created by masatakanabeshima on 2016/02/13.
  */
-public class Rect {
+public final class Rect {
     public Rect(double x, double y, double width, double height)
     {
         this.x = x;
@@ -50,11 +50,6 @@ public class Rect {
                 y == rect.y &&
                 width == rect.width &&
                 height == rect.height;
-    }
-
-    public Rect clone()
-    {
-        return new Rect(x, y, width, height);
     }
 
     public static final Rect empty = new Rect(Double.POSITIVE_INFINITY,

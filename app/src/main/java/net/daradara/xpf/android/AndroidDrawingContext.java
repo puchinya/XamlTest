@@ -11,33 +11,86 @@ import net.daradara.xpf.Rect;
 import net.daradara.xpf.Vector;
 import net.daradara.xpf.media.Brush;
 import net.daradara.xpf.media.Color;
+import net.daradara.xpf.media.Drawing;
 import net.daradara.xpf.media.DrawingContext;
+import net.daradara.xpf.media.DrawingGroup;
 import net.daradara.xpf.media.FormattedText;
+import net.daradara.xpf.media.Geometry;
+import net.daradara.xpf.media.GeometryDrawing;
 import net.daradara.xpf.media.Pen;
+import net.daradara.xpf.media.RectangleGeometry;
 import net.daradara.xpf.media.SolidColorBrush;
-import net.daradara.xpf.media.Visual;
+import net.daradara.xpf.media.TextDrawing;
+
+import java.util.Stack;
 
 /**
  * Created by masatakanabeshima on 2016/02/14.
  */
 public class AndroidDrawingContext extends DrawingContext
 {
-    public AndroidDrawingContext(@NonNull Canvas canvas,
-                                 @NonNull Visual visual)
+    public AndroidDrawingContext(@NonNull Canvas canvas)
     {
         m_canvas = canvas;
-        m_visual = visual;
-        m_matrix = createMatrix(visual);
     }
 
     private Canvas m_canvas;
-    private Visual m_visual;
-    private Matrix m_matrix;
 
     @Override
     public void close()
     {
 
+    }
+
+    private Stack<Matrix> m_offsetStack = new Stack<>();
+    private static final Matrix m_defaultOffset = new Matrix();
+
+    private Matrix getCurrentOffset()
+    {
+        if(m_offsetStack.empty()) {
+            return m_defaultOffset;
+        }
+        return m_offsetStack.peek();
+    }
+
+    public void pushOffset(Vector offset)
+    {
+        Matrix m = new Matrix(getCurrentOffset());
+        m.postTranslate((float)offset.x, (float)offset.y);
+        m_offsetStack.push(m);
+    }
+
+    public void popOffset()
+    {
+        m_offsetStack.pop();
+    }
+
+    @Override
+    public void drawDrawing(@NonNull Drawing drawing) {
+        if(drawing instanceof DrawingGroup) {
+            DrawingGroup drawingGroup = (DrawingGroup)drawing;
+            for(Drawing child : drawingGroup.getChildren()) {
+                drawDrawing(child);
+            }
+        } else if(drawing instanceof GeometryDrawing) {
+            GeometryDrawing geometryDrawing = (GeometryDrawing)drawing;
+            drawGeometry(geometryDrawing.getBrush(), geometryDrawing.getPen(), geometryDrawing.getGeometry());
+        }  else if(drawing instanceof TextDrawing) {
+            TextDrawing textDrawing = (TextDrawing)drawing;
+            drawText(textDrawing.getText(), textDrawing.getOffset());
+        } else {
+
+        }
+    }
+
+    @Override
+    public void drawGeometry(@Nullable Brush brush, @Nullable Pen pen, @NonNull Geometry geometry) {
+
+        if(geometry instanceof RectangleGeometry) {
+            RectangleGeometry rectangleGeometry = (RectangleGeometry)geometry;
+            drawRoundedRectangle(brush, pen, rectangleGeometry.getRect(),
+                    rectangleGeometry.getRadiusX(), rectangleGeometry.getRadiusY());
+        }
     }
 
     @Override
@@ -51,12 +104,10 @@ public class AndroidDrawingContext extends DrawingContext
             throw new IllegalArgumentException();
         }
 
-        m_canvas.setMatrix(m_matrix);
-
-        float left = (float)(center.x - radiusX);
-        float top = (float)(center.y - radiusY);
-        float right = (float)(center.x + radiusX);
-        float bottom = (float)(center.y + radiusY);
+        float left = (float)(center.getX() - radiusX);
+        float top = (float)(center.getY() - radiusY);
+        float right = (float)(center.getX() + radiusX);
+        float bottom = (float)(center.getY() + radiusY);
 
         Paint paint = createPaint(brush);
         if(paint != null) {
@@ -78,9 +129,8 @@ public class AndroidDrawingContext extends DrawingContext
 
         Paint paint = createPaint(pen);
         if(paint != null) {
-            m_canvas.setMatrix(m_matrix);
-            m_canvas.drawLine((float) point0.x, (float) point0.y,
-                    (float) point1.x, (float) point1.y, paint);
+            m_canvas.drawLine((float) point0.getX(), (float) point0.getY(),
+                    (float) point1.getX(), (float) point1.getY(), paint);
         }
     }
 
@@ -92,15 +142,12 @@ public class AndroidDrawingContext extends DrawingContext
             throw new IllegalArgumentException();
         }
 
-        Matrix prevMatrix = m_canvas.getMatrix();
-        Matrix matrix = createMatrix(m_visual);
-        matrix.postConcat(prevMatrix);
-//        m_canvas.setMatrix(matrix);
+        m_canvas.setMatrix(getCurrentOffset());
 
         Paint paint = createPaint(brush);
         if(paint != null) {
-            m_canvas.drawRect((float)rect.x, (float)rect.y,
-                    (float)rect.getRight(), (float)rect.getBottom(), paint);
+            m_canvas.drawRect((float) rect.x, (float) rect.y,
+                    (float) rect.getRight(), (float) rect.getBottom(), paint);
         }
 
         paint = createPaint(pen);
@@ -109,7 +156,6 @@ public class AndroidDrawingContext extends DrawingContext
                     (float) rect.getRight(), (float) rect.getBottom(), paint);
         }
 
-//        m_canvas.setMatrix(prevMatrix);
     }
 
     @Override
@@ -123,7 +169,8 @@ public class AndroidDrawingContext extends DrawingContext
             throw new IllegalArgumentException();
         }
 
-        m_canvas.setMatrix(m_matrix);
+        m_canvas.save();
+        m_canvas.concat(getCurrentOffset());
 
         Paint paint = createPaint(brush);
         if(paint != null) {
@@ -138,23 +185,24 @@ public class AndroidDrawingContext extends DrawingContext
                     (float) rect.getRight(), (float) rect.getBottom(),
                     (float) radiusX, (float) radiusY, paint);
         }
+
+        m_canvas.restore();
     }
 
     @Override
     public void drawText(@NonNull FormattedText formattedText, @NonNull Point origin)
     {
-        m_canvas.setMatrix(m_matrix);
-        //m_canvas.drawText();
-    }
+        m_canvas.save();
+        m_canvas.concat(getCurrentOffset());
 
-    private Matrix createMatrix(Visual visual)
-    {
-        Matrix matrix = new Matrix();
+        Paint paint = createPaint(formattedText.m_foreground);
+        if(paint != null) {
+            paint.setTextSize((float)formattedText.m_emSize);
+            m_canvas.drawText(formattedText.m_text,
+                    (float)origin.getX(), (float)origin.getY(),paint);
+        }
 
-        Vector visualOffset = visual.getVisualOffset();
-        matrix.postTranslate((float)visualOffset.x, (float)visualOffset.y);
-
-        return matrix;
+        m_canvas.restore();
     }
 
     private @Nullable Paint createPaint(@Nullable Pen pen)

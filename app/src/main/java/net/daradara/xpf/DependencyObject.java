@@ -9,14 +9,30 @@ import java.util.Map;
 /**
  * Created by masatakanabeshima on 2016/01/10.
  */
-public class DependencyObject extends DispatcherObject {
+public class DependencyObject extends DispatcherObject implements Cloneable {
 
     public DependencyObject()
     {
 
     }
 
-    public @Nullable Object getValue(@NonNull DependencyProperty dp)
+    @Override
+    public DependencyObject clone()
+    {
+        DependencyObject r = null;
+
+        try {
+            r = (DependencyObject)super.clone();
+            r.m_currentValues = new HashMap<>(m_currentValues);
+            r.m_localValues = new HashMap<>(m_localValues);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return r;
+    }
+
+    public final @Nullable Object getValue(@NonNull DependencyProperty dp)
     {
         if(dp == null || !dp.getOwnerType().isInstance(this)) {
             throw new IllegalArgumentException("dp is invalid");
@@ -37,7 +53,7 @@ public class DependencyObject extends DispatcherObject {
         }
     }
 
-    public @Nullable Object readLocalValue(@NonNull DependencyProperty dp) {
+    public final @Nullable Object readLocalValue(@NonNull DependencyProperty dp) {
         if (dp == null || !dp.getOwnerType().isInstance(this)) {
             throw new IllegalArgumentException("dp is invalid.");
         }
@@ -49,7 +65,7 @@ public class DependencyObject extends DispatcherObject {
         }
     }
 
-    public void setValue(@NonNull DependencyProperty dp, @Nullable Object value)
+    public final void setValue(@NonNull DependencyProperty dp, @Nullable Object value)
     {
         if(dp == null || !dp.getOwnerType().isInstance(this)) {
             throw new IllegalArgumentException("dp is invalid.");
@@ -65,7 +81,7 @@ public class DependencyObject extends DispatcherObject {
         onPropertyChanged(dp, oldValue, value);
     }
 
-    public void setCurrentValue(@NonNull DependencyProperty dp, @Nullable Object value)
+    public final void setCurrentValue(@NonNull DependencyProperty dp, @Nullable Object value)
     {
         if(dp == null || !dp.getOwnerType().isInstance(this)) {
             throw new IllegalArgumentException("dp is invalid.");

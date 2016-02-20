@@ -9,7 +9,7 @@ import net.daradara.xpf.PropertyMetadata;
 /**
  * Created by masatakanabeshima on 2016/02/12.
  */
-public class Pen extends DependencyObject {
+public final class Pen extends DependencyObject implements Cloneable {
 
     public Pen()
     {
@@ -20,6 +20,20 @@ public class Pen extends DependencyObject {
     {
         setBrush(brush);
         setThickness(thickness);
+    }
+
+    @Override
+    public Pen clone()
+    {
+        Pen r = null;
+
+        try {
+            r = (Pen)super.clone();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return r;
     }
 
     public @Nullable Brush getBrush()

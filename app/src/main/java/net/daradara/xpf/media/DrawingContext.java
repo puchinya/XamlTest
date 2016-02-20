@@ -17,6 +17,8 @@ public abstract class DrawingContext extends DispatcherObject {
     }
 
     public abstract void close();
+    public abstract void drawDrawing(@NonNull Drawing drawing);
+    public abstract void drawGeometry(@Nullable Brush brush, @Nullable Pen pen, @NonNull Geometry geometry);
     public abstract void drawEllipse(@Nullable Brush brush,
                                      @Nullable Pen pen,
                                      @NonNull Point center,

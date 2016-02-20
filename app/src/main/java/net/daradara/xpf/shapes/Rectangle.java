@@ -24,8 +24,8 @@ public class Rectangle extends Shape {
         if(strokeBrush != null) {
             pen = new Pen(strokeBrush, getStrokeThickness());
         }
-        Size size = getDesiredSize();
+
         drawingContext.drawRectangle(getFill(), pen,
-                new Rect(0.0, 0.0, size.getWidth(), size.getHeight()));
+                new Rect(0.0, 0.0, getActualWidth(), getActualHeight()));
     }
 }

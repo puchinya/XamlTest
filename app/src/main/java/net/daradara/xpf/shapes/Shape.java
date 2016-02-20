@@ -19,38 +19,32 @@ public abstract class Shape extends FrameworkElement {
 
     }
 
-    @Override
-    protected @NonNull Size measureOverride(@NonNull Size availableSize)
-    {
-        return availableSize;
-    }
-
-    public void setFill(@Nullable Brush value)
+    public final void setFill(@Nullable Brush value)
     {
         setValue(fillProperty, value);
     }
 
-    public @Nullable Brush getFill()
+    public final @Nullable Brush getFill()
     {
         return (Brush)getValue(fillProperty);
     }
 
-    public void setStroke(@Nullable Brush value)
+    public final void setStroke(@Nullable Brush value)
     {
         setValue(strokeProperty, value);
     }
 
-    public @Nullable Brush getStroke()
+    public final @Nullable Brush getStroke()
     {
         return (Brush)getValue(strokeProperty);
     }
 
-    public void setStrokeThickness(double value)
+    public final void setStrokeThickness(double value)
     {
         setValue(strokeThicknessProperty, Double.valueOf(value));
     }
 
-    public double getStrokeThickness()
+    public final double getStrokeThickness()
     {
         return ((Double)getValue(strokeThicknessProperty)).doubleValue();
     }

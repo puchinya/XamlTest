@@ -3,7 +3,7 @@ package net.daradara.xpf;
 /**
  * Created by masatakanabeshima on 2016/01/23.
  */
-public class Thickness {
+public final class Thickness {
 
     public Thickness(double uniformLength)
     {

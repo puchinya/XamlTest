@@ -3,7 +3,7 @@ package net.daradara.xpf;
 /**
  * Created by masatakanabeshima on 2016/02/11.
  */
-public class Vector {
+public final class Vector {
     public Vector(double x, double y)
     {
         this.x = x;

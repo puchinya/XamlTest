@@ -1,18 +1,19 @@
-package net.daradara.xpf.media;
+package net.daradara.xpf;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import net.daradara.xpf.DependencyObject;
-import net.daradara.xpf.Vector;
-
 /**
  * Created by masatakanabeshima on 2016/02/11.
  */
-public class Visual extends DependencyObject {
+public abstract class Visual extends DependencyObject {
 
-    public @NonNull
-    Vector getVisualOffset()
+    protected Visual()
+    {
+
+    }
+
+    public @NonNull Vector getVisualOffset()
     {
         return m_visualOffset;
     }
@@ -52,7 +53,6 @@ public class Visual extends DependencyObject {
         if(visual != null) {
             onVisualChildrenChanged(visual, null);
         }
-
     }
 
     protected void removeVisualChild(@NonNull Visual visual)
@@ -75,6 +75,11 @@ public class Visual extends DependencyObject {
                                            @Nullable DependencyObject visualRemoved)
     {
 
+    }
+
+    protected @Nullable Visual hitTestCore(@NonNull Point point)
+    {
+        return null;
     }
 
     private Visual m_visualParent = null;
